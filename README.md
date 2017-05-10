@@ -1,24 +1,31 @@
-RipMe [![Build Status](https://travis-ci.org/4pr0n/ripme.svg?branch=master)](https://travis-ci.org/4pr0n/ripme)
-=====
+# RipMe
+
+[![Build Status](https://travis-ci.org/4pr0n/ripme.svg?branch=master)](https://travis-ci.org/4pr0n/ripme)
+[![Join the chat at https://gitter.im/4pr0n-ripme/Lobby](https://badges.gitter.im/4pr0n-ripme/Lobby.svg)](https://gitter.im/4pr0n-ripme/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 Album ripper for various websites. Runs on your computer. Requires Java 1.6
 
 ![Screenshot](http://i.imgur.com/kWzhsIu.png)
 
-[Download v1.x](http://rarchives.com/ripme.jar) (ripme.jar)
---------------------------
-For information about running the `.jar` file, see [the How To Run wiki](https://github.com/4pr0n/ripme/wiki/How-To-Run-RipMe)
+## [Downloads](https://github.com/4pr0n/ripme/releases)
 
-[Changelog](http://rarchives.com/ripme.json) (ripme.json)
---------------
+Download `ripme.jar` from the [latest release](https://github.com/4pr0n/ripme/releases).
 
-Features
----------------
+**Note: If you're currently using version 1.2.x or 1.3.x, you will not automatically get updates to the newest versions. We recommend downloading the latest version from the link above.**
+
+For information about running the `.jar` file, see [the How To Run wiki](https://github.com/4pr0n/ripme/wiki/How-To-Run-RipMe).
+
+## [Changelog](https://github.com/4pr0n/ripme/blob/1.3.0/ripme.json) (ripme.json)
+
+## [Website](http://rip.rarchives.com/)
+
+# Features
 
 * Quickly downloads all images in an online album (see supported sites below)
 * Easily re-rip albums to fetch new content
 
-Supported sites:
+## [List of Supported Sites](https://github.com/4pr0n/ripme/wiki/Supported-Sites)
+
 * imgur
 * twitter
 * tumblr
@@ -37,14 +44,17 @@ Supported sites:
 * xhamster
 * (more)
 
-[Full updated list](https://github.com/4pr0n/ripme/issues/8)
+## Not Supported?
 
-Request more sites by adding a comment to [this Github issue](https://github.com/4pr0n/ripme/issues/8) or by following the wiki guide [How To Create A Ripper for HTML Websites](https://github.com/4pr0n/ripme/wiki/How-To-Create-A-Ripper-for-HTML-websites)
+Request support for more sites by adding a comment to [this Github issue](https://github.com/4pr0n/ripme/issues/502).
 
-Compiling & Building
---------------------
+If you're a developer, you can add your own by following the wiki guide
+[How To Create A Ripper for HTML Websites](https://github.com/4pr0n/ripme/wiki/How-To-Create-A-Ripper-for-HTML-websites).
 
-The project uses [Maven](http://maven.apache.org/). To build the .jar file using Maven, navigate to the root project directory and run:
+# Compiling & Building
+
+The project uses [Maven](http://maven.apache.org/).
+To build the .jar file using Maven, navigate to the root project directory and run:
 
 ```bash
 mvn clean compile assembly:single
@@ -52,8 +62,16 @@ mvn clean compile assembly:single
 
 This will include all dependencies in the JAR.
 
-Dependencies
-------------
+# Running Tests
+
+After building you can run tests by running the following:
+
+```bash
+mvn test
+```
+
+# Dependencies
+
 * junit-3.8.1
 * jsoup-1.7.3
 * json-20140107

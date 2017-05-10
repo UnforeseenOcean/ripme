@@ -3,6 +3,10 @@ package com.rarchives.ripme;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.FileNotFoundException;
+
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Arrays;
@@ -38,7 +42,7 @@ public class App {
         Utils.configureLogger();
         System.setProperty("apple.laf.useScreenMenuBar", "true");
         System.setProperty("com.apple.mrj.application.apple.menu.about.name", "RipMe");
-        logger  = Logger.getLogger(App.class);
+        logger = Logger.getLogger(App.class);
         logger.info("Initialized ripme v" + UpdateUtils.getThisJarVersion());
 
         if (args.length > 0) {
@@ -94,14 +98,13 @@ public class App {
         }
         if (cl.hasOption('R')) {
             loadHistory();
-
             if (HISTORY.toList().size() == 0) {
                 System.err.println("There are no history entries to re-rip. Rip some albums first");
                 System.exit(-1);
             }
             int added = 0;
             for (HistoryEntry entry : HISTORY.toList()) {
-                if (entry.selected) { 
+                if (entry.selected) {
                     added++;
                     try {
                         URL url = new URL(entry.url);
@@ -119,8 +122,8 @@ public class App {
                 }
             }
             if (added == 0) {
-                System.err.println("No history entries have been 'Checked'\n" + 
-                                        "Check an entry by clicking the checkbox to the right of the URL or Right-click a URL to check/uncheck all items");
+                System.err.println("No history entries have been 'Checked'\n" +
+                    "Check an entry by clicking the checkbox to the right of the URL or Right-click a URL to check/uncheck all items");
                 System.exit(-1);
             }
         }
@@ -134,46 +137,67 @@ public class App {
             System.err.println("\nCannot specify '-d' and '-D' simultaneously");
             System.exit(-1);
         }
-        if(cl.hasOption('l')) {
+        if (cl.hasOption('l')) {
             // change the default rips directory
             Utils.setConfigString("rips.directory", cl.getOptionValue('l'));
         }
-        if (cl.hasOption('u')) {
-            // User provided URL, rip it.
+        if (cl.hasOption('f')) {
+            String filename = cl.getOptionValue('f');
             try {
-                URL url = new URL(cl.getOptionValue('u').trim());
-                rip(url);
-                List<String> history = Utils.getConfigList("download.history");
-                if (!history.contains(url.toExternalForm())) {
-                    history.add(url.toExternalForm());
-                    Utils.setConfigList("download.history", Arrays.asList(history.toArray()));
-                    if(!cl.hasOption("n")) {
-                        Utils.saveConfig();
-                    }
+                String url;
+                BufferedReader br = new BufferedReader(new FileReader(filename));
+                while ((url = br.readLine()) != null) {
+                    // loop through each url in the file and proces each url individually.
+                    ripURL(url.trim(), cl.hasOption("n"));
                 }
-            } catch (MalformedURLException e) {
-                logger.error("[!] Given URL is not valid. Expected URL format is http://domain.com/...");
-                System.exit(-1);
-            } catch (Exception e) {
-                logger.error("[!] Error while ripping URL " + cl.getOptionValue('u'), e);
-                System.exit(-1);
+            } catch (FileNotFoundException fne) {
+                logger.error("[!] File containing list of URLs not found. Cannot continue.");
+            } catch (IOException ioe) {
+                logger.error("[!] Failed reading file containing list of URLs. Cannot continue.");
             }
+        }
+        if (cl.hasOption('u')) {
+            String url = cl.getOptionValue('u').trim();
+            ripURL(url, cl.hasOption("n"));
+        }
+    }
+
+    // this function will attempt to rip the provided url
+    public static void ripURL(String targetURL, boolean saveConfig) {
+        try {
+            URL url = new URL(targetURL);
+            rip(url);
+            List<String> history = Utils.getConfigList("download.history");
+            if (!history.contains(url.toExternalForm())) {
+                history.add(url.toExternalForm());
+                Utils.setConfigList("download.history", Arrays.asList(history.toArray()));
+                if (saveConfig) {
+                    Utils.saveConfig();
+                }
+            }
+        } catch (MalformedURLException e) {
+            logger.error("[!] Given URL is not valid. Expected URL format is http://domain.com/...");
+            // System.exit(-1);
+        } catch (Exception e) {
+            logger.error("[!] Error while ripping URL " + targetURL, e);
+            // System.exit(-1);
         }
     }
 
     public static Options getOptions() {
         Options opts = new Options();
-        opts.addOption("h", "help",      false, "Print the help");
-        opts.addOption("u", "url",       true,  "URL of album to rip");
-        opts.addOption("t", "threads",   true,  "Number of download threads per rip");
+        opts.addOption("h", "help", false, "Print the help");
+        opts.addOption("u", "url", true, "URL of album to rip");
+        opts.addOption("t", "threads", true, "Number of download threads per rip");
         opts.addOption("w", "overwrite", false, "Overwrite existing files");
-        opts.addOption("r", "rerip",     false, "Re-rip all ripped albums");
-        opts.addOption("R", "rerip-selected",     false, "Re-rip all selected albums");
-        opts.addOption("d", "saveorder",   false, "Save the order of images in album");
+        opts.addOption("r", "rerip", false, "Re-rip all ripped albums");
+        opts.addOption("R", "rerip-selected", false, "Re-rip all selected albums");
+        opts.addOption("d", "saveorder", false, "Save the order of images in album");
         opts.addOption("D", "nosaveorder", false, "Don't save order of images");
-        opts.addOption("4", "skip404",   false, "Don't retry after a 404 (not found) error");
+        opts.addOption("4", "skip404", false, "Don't retry after a 404 (not found) error");
         opts.addOption("l", "ripsdirectory", true, "Rips Directory (Default: ./rips)");
         opts.addOption("n", "no-prop-file", false, "Do not create properties file.");
+        opts.addOption("f", "urls-file", true, "Rip URLs from a file.");
         return opts;
     }
 
@@ -183,7 +207,7 @@ public class App {
             CommandLine cl = parser.parse(getOptions(), args, false);
             return cl;
         } catch (ParseException e) {
-            logger.error("[!] Error while parsing command-line arguments: " + args, e);
+            logger.error("[!] Error while parsing command-line arguments: " + Arrays.toString(args), e);
             System.exit(-1);
             return null;
         }
@@ -200,7 +224,7 @@ public class App {
                 logger.error("Failed to load history from file " + historyFile, e);
                 System.out.println(
                         "RipMe failed to load the history file at " + historyFile.getAbsolutePath() + "\n\n" +
-                        "Error: " + e.getMessage() + "\n\n" + 
+                        "Error: " + e.getMessage() + "\n\n" +
                         "Closing RipMe will automatically overwrite the contents of this file,\n" +
                         "so you may want to back the file up before closing RipMe!");
             }

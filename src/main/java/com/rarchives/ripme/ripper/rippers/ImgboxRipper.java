@@ -39,7 +39,7 @@ public class ImgboxRipper extends AbstractHTMLRipper {
         throw new MalformedURLException("Expected imgbox.com URL format: " +
                         "imgbox.com/g/albumid - got " + url + "instead");
     }
-    
+
     @Override
     public Document getFirstPage() throws IOException {
         return Http.url(url).get();
@@ -49,7 +49,7 @@ public class ImgboxRipper extends AbstractHTMLRipper {
         List<String> imageURLs = new ArrayList<String>();
         for (Element thumb : doc.select("div.boxed-content > a > img")) {
             String image = thumb.attr("src")
-                                .replaceAll("[a-zA-Z0-9.]+s.imgbox.com",
+                                .replaceAll("[-a-zA-Z0-9.]+s.imgbox.com",
                                             "i.imgbox.com");
             imageURLs.add(image);
         }

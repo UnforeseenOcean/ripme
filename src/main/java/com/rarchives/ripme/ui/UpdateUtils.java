@@ -21,24 +21,27 @@ import com.rarchives.ripme.utils.Utils;
 public class UpdateUtils {
 
     private static final Logger logger = Logger.getLogger(UpdateUtils.class);
-    private static final String DEFAULT_VERSION = "1.2.13";
-    private static final String updateJsonURL = "http://rarchives.com/ripme.json";
-    private static final String updateJarURL = "http://rarchives.com/ripme.jar";
+    private static final String DEFAULT_VERSION = "1.4.14";
+    private static final String updateJsonURL = "https://raw.githubusercontent.com/4pr0n/ripme/master/ripme.json";
     private static final String mainFileName = "ripme.jar";
     private static final String updateFileName = "ripme.jar.update";
+
+    public static String getUpdateJarURL(String latestVersion) {
+        return "https://github.com/4pr0n/ripme/releases/download/" + latestVersion + "/ripme.jar";
+    }
 
     public static String getThisJarVersion() {
         String thisVersion = UpdateUtils.class.getPackage().getImplementationVersion();
         if (thisVersion == null) {
             // Version is null if we're not running from the JAR
-            thisVersion = DEFAULT_VERSION; ; // Super-high version number
+            thisVersion = DEFAULT_VERSION; // Super-high version number
         }
         return thisVersion;
     }
-    
+
     public static void updateProgram(JLabel configUpdateLabel) {
         configUpdateLabel.setText("Checking for update...");
-        
+
         Document doc = null;
         try {
             logger.debug("Retrieving " + UpdateUtils.updateJsonURL);
@@ -65,7 +68,7 @@ public class UpdateUtils {
             if (change.startsWith(UpdateUtils.getThisJarVersion() + ":")) {
                 break;
             }
-            changeList.append("<br>  + " + change);
+            changeList.append("<br>  + ").append(change);
         }
 
         String latestVersion = json.getString("latestVersion");
@@ -86,7 +89,7 @@ public class UpdateUtils {
             configUpdateLabel.setText("<html><font color=\"green\">Downloading new version...</font></html>");
             logger.info("New version found, downloading...");
             try {
-                UpdateUtils.downloadJarAndLaunch(updateJarURL);
+                UpdateUtils.downloadJarAndLaunch(getUpdateJarURL(latestVersion));
             } catch (IOException e) {
             JOptionPane.showMessageDialog(null,
                     "Error while updating: " + e.getMessage(),
@@ -103,12 +106,12 @@ public class UpdateUtils {
             logger.debug("Running latest version: " + UpdateUtils.getThisJarVersion());
         }
     }
-    
+
     private static boolean isNewerVersion(String latestVersion) {
         int[] oldVersions = versionStringToInt(getThisJarVersion());
         int[] newVersions = versionStringToInt(latestVersion);
         if (oldVersions.length < newVersions.length) {
-            System.err.println("Calculated: " + oldVersions + " < " + latestVersion);
+            System.err.println("Calculated: " + getThisJarVersion() + " < " + latestVersion);
             return true;
         }
 
@@ -121,16 +124,13 @@ public class UpdateUtils {
                 logger.debug("oldVersion " + getThisJarVersion() + " > latestVersion " + latestVersion);
                 return false;
             }
-            else {
-                continue;
-            }
         }
 
         // At this point, the version numbers are exactly the same.
         // Assume any additional changes to the version text means a new version
         return !(latestVersion.equals(getThisJarVersion()));
     }
-    
+
     private static int[] versionStringToInt(String version) {
         String strippedVersion = version.split("-")[0];
         String[] strVersions = strippedVersion.split("\\.");
@@ -199,6 +199,7 @@ public class UpdateUtils {
                     logger.info("Executing: " + batchFile);
                     Runtime.getRuntime().exec(batchExec);
                 } catch (IOException e) {
+                    //TODO implement proper stack trace handling this is really just intented as a placeholder until you implement proper error handling
                     e.printStackTrace();
                 }
             }
@@ -206,5 +207,5 @@ public class UpdateUtils {
         logger.info("Exiting older version, should execute update script (" + batchFile + ") during exit");
         System.exit(0);
     }
-    
+
 }
